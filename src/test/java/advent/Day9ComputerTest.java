@@ -688,7 +688,7 @@ public class Day9ComputerTest
 		day9Computer.loadAndExecute(new InputStreamResource(
 						IOUtils.toInputStream(input, StandardCharsets.UTF_8)));
 		String output = Joiner.on("").join(stdout);
-		assertThat(output).isEqualTo(1219070632396864L);
+		assertThat(output).isEqualTo("1219070632396864");
 	}
 
 	@Test
@@ -708,9 +708,23 @@ public class Day9ComputerTest
 		LinkedBlockingQueue<String> stdin = new LinkedBlockingQueue<>();
 		stdin.add("1");
 
+		LinkedBlockingQueue<String> stdout = new LinkedBlockingQueue<>();
+
 		Day9Computer day9Computer = new Day9Computer(stdin, stdout);
 		day9Computer.loadAndExecute(new ClassPathResource("advent/day9input.txt"));
-		assertThat(stdout).containsOnly("1");
+		assertThat(stdout).containsOnly("2399197539");
+	}
 
+	@Test
+	public void day9Part2() throws Exception
+	{
+		LinkedBlockingQueue<String> stdin = new LinkedBlockingQueue<>();
+		stdin.add("2");
+
+		LinkedBlockingQueue<String> stdout = new LinkedBlockingQueue<>();
+
+		Day9Computer day9Computer = new Day9Computer(stdin, stdout);
+		day9Computer.loadAndExecute(new ClassPathResource("advent/day9input.txt"));
+		assertThat(stdout).containsOnly("35106");
 	}
 }

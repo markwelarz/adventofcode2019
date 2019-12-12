@@ -57,18 +57,30 @@ public class Day9Computer
 
 	public void outputProgram()
 	{
-		int pc = 0;
-		while (pc < memory.size())
+		long pc = 0;
+		try
 		{
-			Instruction instruction = readInstruction();
-			System.out.print("[" + pc + "] " + "[" + instruction.name() + "] ");
-			for (long i = 0; i < instruction.size(); i++)
+			while (pc < memory.size())
 			{
-				System.out.print(memory.get(i + pc) + ",");
+				Instruction instruction = readInstruction();
+				System.out.print("[" + pc + "] " + "[" + instruction.name() + "] ");
+				for (long i = 0; i < instruction.size(); i++)
+				{
+					System.out.print(memory.get(i + pc) + ",");
+				}
+				pc += instruction.size();
+				instructionCounter += instruction.size();
+				System.out.println();
 			}
-			pc += instruction.size();
-			instructionCounter += instruction.size();
-			System.out.println();
+		}
+		catch (IllegalStateException ise)
+		{
+			while (pc < memory.size())
+			{
+
+				System.out.println("[" + pc + "] " + memory.get(pc));
+				pc++;
+			}
 		}
 	}
 
@@ -87,7 +99,7 @@ public class Day9Computer
 		}
 	}
 
-	private long getParamValue(char instructionMode, long paramNumber)
+	private long getReadParamValue(char instructionMode, long paramNumber)
 	{
 		long paramValue = readValueAt(instructionCounter + paramNumber);
 		if (instructionMode == '0')
@@ -101,24 +113,24 @@ public class Day9Computer
 		return paramValue;
 	}
 
-	private long getParamValue2(char instructionMode, long paramNumber)
+	private long getWriteParamAddress(char instructionMode, long paramNumber)
 	{
 		long paramValue = readValueAt(instructionCounter + paramNumber);
 		if (instructionMode == '2')
 		{
-			paramValue = memory.getOrDefault(relativeBase + paramValue, 0L);
+			paramValue = relativeBase + paramValue;
 		}
 		return paramValue;
 	}
 
-	private Supplier<Long> paramSupplier(char instructionMode, int paramNumber)
+	private Supplier<Long> readParamSupplier(char instructionMode, int paramNumber)
 	{
-		return () -> getParamValue(instructionMode, paramNumber);
+		return () -> getReadParamValue(instructionMode, paramNumber);
 	}
 
-	private Supplier<Long> paramSupplier2(char instructionMode, int paramNumber)
+	private Supplier<Long> writeParamSupplier(char instructionMode, int paramNumber)
 	{
-		return () -> getParamValue2(instructionMode, paramNumber);
+		return () -> getWriteParamAddress(instructionMode, paramNumber);
 	}
 
 	public Instruction readInstruction()
@@ -126,36 +138,35 @@ public class Day9Computer
 		long opcode = memory.get(instructionCounter);
 		String opcodepadded = StringUtils.leftPad(String.valueOf(opcode), 5, '0');
 
-		Supplier<Long> param1Mode = paramSupplier(opcodepadded.charAt(2), 1);
-		Supplier<Long> param2Mode = paramSupplier(opcodepadded.charAt(1), 2);
-		Supplier<Long> param3Mode = paramSupplier(opcodepadded.charAt(0), 3);
-
-		Supplier<Long> param1Immediate = paramSupplier2(opcodepadded.charAt(2), 1);
-		Supplier<Long> param2Immediate = paramSupplier2(opcodepadded.charAt(1), 2);
-		Supplier<Long> param3Immediate = paramSupplier2(opcodepadded.charAt(0), 3);
+		Supplier<Long> readParam1 = readParamSupplier(opcodepadded.charAt(2), 1);
+		Supplier<Long> readParam2 = readParamSupplier(opcodepadded.charAt(1), 2);
+		Supplier<Long> readParam3 = readParamSupplier(opcodepadded.charAt(0), 3);
+		Supplier<Long> writeParam1 = writeParamSupplier(opcodepadded.charAt(2), 1);
+		Supplier<Long> writeParam2 = writeParamSupplier(opcodepadded.charAt(1), 2);
+		Supplier<Long> writeParam3 = writeParamSupplier(opcodepadded.charAt(0), 3);
 
 		switch (opcodepadded.substring(3))
 		{
 			case "01":
-				return new AddInstruction(param1Mode, param2Mode, param3Immediate);
+				return new AddInstruction(readParam1, readParam2, writeParam3);
 			case "02":
-				return new MultInstruction(param1Mode, param2Mode, param3Immediate);
+				return new MultInstruction(readParam1, readParam2, writeParam3);
 			case "99":
 				return new HaltInstruction();
 			case "03":
-				return new InputInstruction(param1Immediate);
+				return new InputInstruction(writeParam1);
 			case "04":
-				return new OutputInstruction(param1Mode);
+				return new OutputInstruction(readParam1);
 			case "05":
-				return new JumpIfTrueInstruction(param1Mode, param2Mode);
+				return new JumpIfTrueInstruction(readParam1, readParam2);
 			case "06":
-				return new JumpIfFalseInstruction(param1Mode, param2Mode);
+				return new JumpIfFalseInstruction(readParam1, readParam2);
 			case "07":
-				return new LessThanInstruction(param1Mode, param2Mode, param3Immediate);
+				return new LessThanInstruction(readParam1, readParam2, writeParam3);
 			case "08":
-				return new EqualInstruction(param1Mode, param2Mode, param3Immediate);
+				return new EqualInstruction(readParam1, readParam2, writeParam3);
 			case "09":
-				return new AdjustRelativeBase(param1Mode);
+				return new AdjustRelativeBase(readParam1);
 			default:
 				throw new IllegalStateException();
 		}
