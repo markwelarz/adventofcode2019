@@ -3,7 +3,6 @@ package advent;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Maps;
-import com.google.common.math.IntMath;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.Validate;
@@ -12,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.core.io.Resource;
 
 import java.io.IOException;
-import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -24,13 +22,18 @@ public class Day14
 	private Logger logger = LoggerFactory.getLogger(Day14.class);
 
 	private Map<String, Reaction> reactions;
-	private Map<String, Integer> wastage = new HashMap<>();
+	private Map<String, Long> wastage = new HashMap<>();
 
-	public int calculatePart1(Resource resource) throws IOException
+	public long calculatePart1(Resource resource) throws IOException
 	{
 		process(resource);
+		return computeOre(1);
+	}
 
-		Map<String, Integer> amountPerMaterial = recurse(reactions.get("FUEL"), 1);
+	public long computeOre(int requiredFuel)
+	{
+		wastage.clear();
+		Map<String, Long> amountPerMaterial = recurse(reactions.get("FUEL"), requiredFuel);
 
 		amountPerMaterial.forEach((k, v) -> logger.debug("{} : {}", k, v));
 		logger.debug("wasted materials {}", wastage);
@@ -38,36 +41,76 @@ public class Day14
 		return amountPerMaterial.get("ORE");
 	}
 
-	Map<String, Integer> recurse(Reaction start, int requiredUnits)
+	int highestFuelLessThan1Trillion = 0;
+
+	int searchForTrillionOre(int from, int to)
+	{
+		long ORE = 1000000000000L;
+
+		if (to >= from)
+		{
+			int fuel = from + (to - from) / 2;
+
+			logger.info("trying fuel={}", fuel);
+			long ore = computeOre(fuel);
+			if (ore <= ORE)
+				highestFuelLessThan1Trillion = Math.max(highestFuelLessThan1Trillion, fuel);
+
+			logger.info("result was {}", ore);
+			if (ore == ORE)
+				return fuel;
+
+			if (ore > ORE)
+				return searchForTrillionOre(from, fuel - 1);
+
+			return searchForTrillionOre(fuel + 1, to);
+		}
+
+		return highestFuelLessThan1Trillion;
+	}
+
+	public int calculatePart2(Resource resource) throws IOException
+	{
+		process(resource);
+		return searchForTrillionOre(1, 83000000);
+	}
+
+	Map<String, Long> recurse(Reaction start, long requiredUnits)
 	{
 		logger.debug("make {}, output-units={}, need units: {}", start.getOutput().getName(),
 						start.getOutput().getAmount(), requiredUnits);
 
-		Map<String, Integer> amountPerMaterial = new HashMap<>();
+		logger.debug("waste is {}", wastage);
+
+		Map<String, Long> amountPerMaterial = new HashMap<>();
 
 		// may have to make more than needed
-		int mustProduceAmount = mustMakeAmount(start.output.amount, requiredUnits);
+		long mustProduceAmount = mustMakeAmount(start.output.amount, requiredUnits);
+		logger.debug("minimum can produce is {}", mustProduceAmount);
 
-		int fromWaste = wastage.getOrDefault(start.output.name, 0);
+		long fromWaste = wastage.getOrDefault(start.output.name, 0L);
 
 		logger.debug("found {} of {} in waste", fromWaste, start.output.name);
 		if (requiredUnits <= fromWaste)
 		{
 			logger.debug("more than enough of {} in waste", start.output.name);
 			wastage.merge(start.output.name, -requiredUnits, (v1, v2) -> v1 + v2);
-			Preconditions.checkState(wastage.getOrDefault(start.output.name, 0) >= 0);
+			Preconditions.checkState(wastage.getOrDefault(start.output.name, 0L) >= 0);
 			return amountPerMaterial;
 		}
 		else if (fromWaste > 0)
 		{
 			// there might be a smaller figure that is more efficient to use waste
-			int tryWithWasteProduceAmount = mustMakeAmount(start.output.amount, requiredUnits - fromWaste);
+			long tryWithWasteProduceAmount = mustMakeAmount(start.output.amount, requiredUnits - fromWaste);
 			logger.debug("using {} waste, still need to make {}", fromWaste, tryWithWasteProduceAmount);
 			if (tryWithWasteProduceAmount < mustProduceAmount)
 			{
 				logger.debug("using some waste units");
 				wastage.merge(start.output.name, -fromWaste, (v1, v2) -> v1 + v2);
-				Preconditions.checkState(wastage.getOrDefault(start.output.name, 0) >= 0);
+				wastage.merge(start.output.name, tryWithWasteProduceAmount + fromWaste - requiredUnits,
+								(v1, v2) -> v1 + v2);
+
+				Preconditions.checkState(wastage.getOrDefault(start.output.name, 0L) >= 0);
 				mustProduceAmount = tryWithWasteProduceAmount;
 			}
 			else
@@ -80,7 +123,7 @@ public class Day14
 			logger.debug("adding {} to waste", mustProduceAmount - requiredUnits);
 			wastage.merge(start.output.name, mustProduceAmount - requiredUnits, (v1, v2) -> v1 + v2);
 		}
-		Preconditions.checkState(wastage.getOrDefault(start.output.name, 0) >= 0);
+		Preconditions.checkState(wastage.getOrDefault(start.output.name, 0L) >= 0);
 
 		Validate.isTrue(mustProduceAmount > 0);
 
@@ -89,42 +132,37 @@ public class Day14
 			Reaction childReaction = reactions.get(inp.name);
 			if (childReaction != null)
 			{
-				Map<String, Integer> thisAmount = recurse(childReaction, mustProduceAmount * inp.getAmount());
+				long productNeeded = oreNeeded(inp.amount, start.output.amount, mustProduceAmount);
+
+				Map<String, Long> thisAmount = recurse(childReaction, productNeeded);
 				thisAmount.forEach((k, v) -> amountPerMaterial.merge(k, v, (v1, v2) -> v1 + v2));
 			}
 			else
 			{
-				int runs = mustProduceAmount / start.output.amount;
+				long oreNeeded = oreNeeded(inp.amount, start.output.amount, mustProduceAmount);
 				Validate.isTrue(mustProduceAmount % start.output.amount == 0);
 
-				int actualOreAmount = runs * inp.amount;
-				logger.debug("at bottom level {} input-amount={}, mustProduceAmount={},actualOreAmount={},runs={}",
-								inp.getName(), inp.getAmount(), mustProduceAmount, actualOreAmount, runs);
+				logger.debug("at bottom level {} input-amount={}, mustProduceAmount={},oreNeeded={}",
+								inp.getName(), inp.getAmount(), mustProduceAmount, oreNeeded);
 
-				amountPerMaterial.merge(inp.getName(), actualOreAmount, (v1, v2) -> v1 + v2);
+				amountPerMaterial.merge(inp.getName(), oreNeeded, (v1, v2) -> v1 + v2);
 			}
 		}
 
 		return amountPerMaterial;
 	}
 
-	//	public static int howMuchToMake2(Material material, int required)
-	//	{
-	//		material.getAmount();
-	//	}
-
-	public static int mustMakeAmount(int outputForSingleRun, int requiredUnits)
+	public long oreNeeded(long inputMaterialAmount1Run, long outputMaterialAmount1Run, long productAmountRequired)
 	{
-		int ceiling = (requiredUnits + outputForSingleRun - 1) / outputForSingleRun;
-		int result = ceiling * outputForSingleRun;
-		return result;
+		long actualOreAmount = (productAmountRequired / outputMaterialAmount1Run) * inputMaterialAmount1Run;
+		return actualOreAmount;
 	}
 
-	public static int howMuchToMake(int in, int out, int required)
+	public static long mustMakeAmount(long outputForSingleRun, long requiredUnits)
 	{
-		int newRequired = Math.max(required, out);
-		int multiple = IntMath.divide(newRequired, out, RoundingMode.HALF_UP);
-		return multiple * in;
+		long ceiling = (requiredUnits + outputForSingleRun - 1) / outputForSingleRun;
+		long result = ceiling * outputForSingleRun;
+		return result;
 	}
 
 	public void process(Resource resource) throws IOException
