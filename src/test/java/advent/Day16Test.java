@@ -1,7 +1,6 @@
 package advent;
 
 import org.apache.commons.io.IOUtils;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.springframework.core.io.ClassPathResource;
@@ -20,7 +19,7 @@ public class Day16Test
 
 	 */
 	@Test
-	public void part1Example1Phase1()
+	public void part1Example1Phase1() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(1, "12345678");
@@ -28,7 +27,7 @@ public class Day16Test
 	}
 
 	@Test
-	public void part1Example1Phase2()
+	public void part1Example1Phase2() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(2, "12345678");
@@ -36,7 +35,7 @@ public class Day16Test
 	}
 
 	@Test
-	public void part1Example1Phase3()
+	public void part1Example1Phase3() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(3, "12345678");
@@ -44,7 +43,7 @@ public class Day16Test
 	}
 
 	@Test
-	public void part1Example1Phase4()
+	public void part1Example1Phase4() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(4, "12345678");
@@ -52,7 +51,7 @@ public class Day16Test
 	}
 
 	@Test
-	public void part1Example2()
+	public void part1Example2() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(100, "80871224585914546619083218645595");
@@ -60,7 +59,7 @@ public class Day16Test
 	}
 
 	@Test
-	public void part1Example3()
+	public void part1Example3() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(100, "19617804207202209144916044189917");
@@ -68,7 +67,7 @@ public class Day16Test
 	}
 
 	@Test
-	public void part1Example4()
+	public void part1Example4() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String result = day16.applyFftPart1(100, "69317163492948606335995924319873");
@@ -86,7 +85,6 @@ public class Day16Test
 	}
 
 	@Nested
-	@Disabled
 	class Part2Examples
 	{
 		@Test
@@ -115,13 +113,12 @@ public class Day16Test
 	}
 
 	@Test
-	@Disabled
 	public void part2() throws Exception
 	{
 		Day16 day16 = new Day16();
 		String input = IOUtils.toString(new ClassPathResource("advent/day16input.txt").getInputStream(),
 						StandardCharsets.UTF_8);
 		String result = day16.applyFftPart2(100, input);
-		assertThat(result).isEqualTo("30379585");
+		assertThat(result).isEqualTo("22808931");
 	}
 }
