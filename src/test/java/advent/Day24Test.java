@@ -43,7 +43,7 @@ public class Day24Test
 										+ "..#..\n"
 										+ "#....");
 		day24.parseInput(input);
-		day24.advanceMinute(0);
+		day24.advanceMinutePart1(0);
 		assertThat(day24.getGrid(0)).containsExactly(
 						new int[] { 1, 0, 0, 1, 0 },
 						new int[] { 1, 1, 1, 1, 0 },
@@ -63,8 +63,8 @@ public class Day24Test
 										+ "..#..\n"
 										+ "#....");
 		day24.parseInput(input);
-		day24.advanceMinute(0);
-		day24.advanceMinute(0);
+		day24.advanceMinutePart1(0);
+		day24.advanceMinutePart1(0);
 		assertThat(day24.getGrid(0)).containsExactly(
 						new int[] { 1, 1, 1, 1, 1 },
 						new int[] { 0, 0, 0, 0, 1 },
@@ -84,9 +84,9 @@ public class Day24Test
 										+ "..#..\n"
 										+ "#....");
 		day24.parseInput(input);
-		day24.advanceMinute(0);
-		day24.advanceMinute(0);
-		day24.advanceMinute(0);
+		day24.advanceMinutePart1(0);
+		day24.advanceMinutePart1(0);
+		day24.advanceMinutePart1(0);
 		assertThat(day24.getGrid(0)).containsExactly(
 						new int[] { 1, 0, 0, 0, 0 },
 						new int[] { 1, 1, 1, 1, 0 },
@@ -106,10 +106,10 @@ public class Day24Test
 										+ "..#..\n"
 										+ "#....");
 		day24.parseInput(input);
-		day24.advanceMinute(0);
-		day24.advanceMinute(0);
-		day24.advanceMinute(0);
-		day24.advanceMinute(0);
+		day24.advanceMinutePart1(0);
+		day24.advanceMinutePart1(0);
+		day24.advanceMinutePart1(0);
+		day24.advanceMinutePart1(0);
 		assertThat(day24.getGrid(0)).containsExactly(
 						new int[] { 1, 1, 1, 1, 0 },
 						new int[] { 0, 0, 0, 0, 1 },
@@ -161,9 +161,30 @@ public class Day24Test
 		assertThat(rating).isEqualTo(28772955);
 	}
 
+	@Test
+	public void part2() throws Exception
+	{
+		Day24 day24 = new Day24();
+		int bugs = day24.part2(new ClassPathResource("advent/day24input.txt"), 200);
+		assertThat(bugs).isEqualTo(2023);
+	}
+
+	@Test
+	public void part2Example1() throws Exception
+	{
+		String input = "....#\n"
+						+ "#..#.\n"
+						+ "#..##\n"
+						+ "..#..\n"
+						+ "#....\n";
+
+		Day24 day24 = new Day24();
+		int bugs = day24.part2(stringResource(input), 10);
+		assertThat(bugs).isEqualTo(99);
+	}
+
 	private Resource stringResource(String code)
 	{
 		return new InputStreamResource(IOUtils.toInputStream(code, StandardCharsets.UTF_8));
 	}
-
 }
