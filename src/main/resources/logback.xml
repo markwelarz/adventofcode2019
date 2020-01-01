@@ -12,8 +12,8 @@
         </encoder>
     </appender>
 
-    <logger name="advent.Day9Computer" level="info"/>
-    <logger name="advent.Day23Computer" level="info"/>
+    <logger name="advent.intcode.Day9Computer" level="info"/>
+    <logger name="advent.intcode.Day23Computer" level="info"/>
     <root level="debug">
         <appender-ref ref="STDOUT"/>
         <appender-ref ref="FILE"/>

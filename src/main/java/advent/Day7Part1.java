@@ -1,5 +1,6 @@
 package advent;
 
+import advent.intcode.Day7Computer;
 import org.paukov.combinatorics3.Generator;
 import org.springframework.core.io.Resource;
 

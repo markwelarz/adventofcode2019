@@ -1,4 +1,4 @@
-package advent;
+package advent.intcode;
 
 import com.google.common.base.Joiner;
 import com.google.common.collect.Lists;

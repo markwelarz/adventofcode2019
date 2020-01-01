@@ -1,4 +1,4 @@
-package advent;
+package advent.intcode;
 
 import com.google.common.base.Splitter;
 import org.apache.commons.io.IOUtils;

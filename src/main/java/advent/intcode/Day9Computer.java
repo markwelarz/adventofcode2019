@@ -1,4 +1,4 @@
-package advent;
+package advent.intcode;
 
 import com.google.common.base.Splitter;
 import org.apache.commons.io.IOUtils;
@@ -18,18 +18,20 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-public class Day23Computer
+public class Day9Computer
 {
-	private static Logger logger = LoggerFactory.getLogger(Day23Computer.class);
+	private static Logger logger = LoggerFactory.getLogger(Day9Computer.class);
 
 	private NavigableMap<Long, Long> memory = new TreeMap<>();
-	private IO stdio;
+	private LinkedBlockingQueue<String> stdout;
+	private LinkedBlockingQueue<String> stdin;
 	private long instructionCounter = 0;
 	private long relativeBase = 0;
 
-	public Day23Computer(IO stdio)
+	public Day9Computer(LinkedBlockingQueue<String> stdin, LinkedBlockingQueue<String> stdout)
 	{
-		this.stdio = stdio;
+		this.stdin = stdin;
+		this.stdout = stdout;
 	}
 
 	public void loadAndExecute(Resource input) throws IOException, InterruptedException
@@ -297,9 +299,9 @@ public class Day23Computer
 		@Override
 		public void execute(NavigableMap<Long, Long> memory) throws InterruptedException
 		{
-			String inputEvent = stdio.read();
+			String inputEvent = stdin.take();
 			Scanner scanner = new Scanner(new StringReader(inputEvent));
-			long value = scanner.nextLong();
+			long value = scanner.nextInt();
 			long writeLocation = writeLocationParam.get();
 			memory.put(writeLocation, value);
 			logger.debug("[input] [pc={}] writeLocation=" + writeLocation + ", value=" + value, instructionCounter);
@@ -334,7 +336,7 @@ public class Day23Computer
 		{
 			long param1 = param1Value.get();
 			logger.debug("[output] [pc={}] value=" + param1, instructionCounter);
-			stdio.write(String.valueOf(param1));
+			stdout.offer(String.valueOf(param1));
 			instructionCounter += 2;
 		}
 
@@ -588,44 +590,4 @@ public class Day23Computer
 	{
 
 	}
-
-	interface IO
-	{
-		String read();
-
-		void write(String value);
-	}
-
-	static class BlockingIO implements IO
-	{
-		private LinkedBlockingQueue<String> stdout;
-		private LinkedBlockingQueue<String> stdin;
-
-		public BlockingIO(LinkedBlockingQueue<String> stdin, LinkedBlockingQueue<String> stdout)
-		{
-			this.stdin = stdin;
-			this.stdout = stdout;
-		}
-
-		@Override
-		public String read()
-		{
-			try
-			{
-				return stdin.take();
-
-			}
-			catch (InterruptedException e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-
-		@Override
-		public void write(String value)
-		{
-			stdout.offer(value);
-		}
-	}
-
 }

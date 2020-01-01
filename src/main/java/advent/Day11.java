@@ -1,5 +1,6 @@
 package advent;
 
+import advent.intcode.Day9Computer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;

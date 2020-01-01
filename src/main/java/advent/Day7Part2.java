@@ -1,5 +1,6 @@
 package advent;
 
+import advent.intcode.Day7Computer;
 import org.paukov.combinatorics3.Generator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
